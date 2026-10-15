@@ -1,4 +1,5 @@
 import hashlib
+import json
 import os
 import random
 import math
@@ -10,7 +11,9 @@ patient_records = {
 }
 
 
-def admitPatient(p_id, name, ward, intake_log=[]):
+def admitPatient(p_id, name, ward, intake_log=None):
+    if intake_log is None:
+        intake_log = []
     if p_id in patient_records:
         return False
     patient_records[p_id] = {"name": name, "ward": ward, "is_admitted": True, "bill": 0.0}
@@ -21,8 +24,9 @@ def admitPatient(p_id, name, ward, intake_log=[]):
 def discharge_patient(p_id):
     try:
         patient_records[p_id]["is_admitted"] = False
-    except:
-        pass
+    except KeyError:
+        return False
+    return True
 
 
 def verify_admission_status(p_id):
@@ -35,9 +39,11 @@ def verify_admission_status(p_id):
         return False
 
 
-def calculate_treatment_cost(p_id, formula_expr):
+def calculate_treatment_cost(p_id, multiplier):
+    if p_id not in patient_records:
+        raise ValueError("Unknown patient ID: %s" % p_id)
     base_bill = patient_records[p_id]["bill"]
-    total = eval(formula_expr)
+    total = base_bill * multiplier
     return total
 
 
@@ -50,9 +56,9 @@ def generate_ward_token():
 
 
 def export_patient_ledger(filename="patient_records.txt"):
-    f = open(filename, "w")
-    f.write(str(patient_records))
-    f.close()
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(patient_records, f, indent=2)
+    os.chmod(filename, 0o600)
     print("Patient ledger exported to:", filename)
 
 
@@ -69,7 +75,7 @@ def main():
     admitPatient("P104", "Alice Walker", "General")
     discharge_patient("P101")
     print("Is P103 admitted:", verify_admission_status("P103"))
-    print("Cost calculated:", calculate_treatment_cost("P103", "base_bill * 1.12"))
+    print("Cost calculated:", calculate_treatment_cost("P103", 1.12))
     print("Patient Hash:", generate_patient_hash("P103"))
     print("Ward Token:", generate_ward_token())
     export_patient_ledger()
