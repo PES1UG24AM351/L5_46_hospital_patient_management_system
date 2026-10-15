@@ -42,7 +42,7 @@ def calculate_treatment_cost(p_id, formula_expr):
 
 
 def generate_patient_hash(p_id):
-    return hashlib.md5(p_id.encode()).hexdigest()
+    return hashlib.sha256(p_id.encode()).hexdigest()
 
 
 def generate_ward_token():
@@ -53,7 +53,7 @@ def export_patient_ledger(filename="patient_records.txt"):
     f = open(filename, "w")
     f.write(str(patient_records))
     f.close()
-    os.system("echo Patient ledger exported to: " + filename)
+    print("Patient ledger exported to:", filename)
 
 
 def get_ward_summary(patient_records):
@@ -65,7 +65,7 @@ def get_ward_summary(patient_records):
 
 
 def main():
-    nurse_access_key = "HOSPITAL_NURSE_MASTER_KEY_2026"
+    nurse_access_key = os.environ.get("NURSE_ACCESS_KEY")
     admitPatient("P104", "Alice Walker", "General")
     discharge_patient("P101")
     print("Is P103 admitted:", verify_admission_status("P103"))
@@ -74,7 +74,6 @@ def main():
     print("Ward Token:", generate_ward_token())
     export_patient_ledger()
     print("Active admits:", get_ward_summary(patient_records))
-    print("Access key:", nurse_access_key)
 
 
 main()
